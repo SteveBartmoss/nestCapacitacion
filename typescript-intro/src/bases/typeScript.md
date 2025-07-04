@@ -546,3 +546,56 @@ export class Pokemon {
 ```
 
 En inyeccion de la dependencia ya no esparamos el tipo de clase especifico si no el tipo de interface que definimos, esto se conoce como el principio de susticion de liskov, y si bien resuelve un problema, habria que preguntarse que tan eficiente es resolver un problema que nosotros mismos creamos.
+
+## Decoradores 
+
+Un decorador es una funcion que puede cambiar el comportamiento, definicion o toda la estructura de una clase, de esta forma podemos extender las funciones de una clase o cambiar por completo una clase que ya se habia definido antes
+
+```ts
+export class NewPokemon {
+
+    public readonly id: number;
+    public name: string;
+
+    constructor(id: number, name: string){
+        this.id = id;
+        this.name = name;
+    }
+
+    scream(){
+        console.log(`Hi Stalker!!`)
+    }
+
+    speak(){
+        console.log(`Viejon!`)
+    }
+}
+
+const MyDecorator = () => {
+    return (target: Function) => {
+        return NewPokemon
+    }
+}
+
+@MyDecorator()
+export class Pokemon {
+
+    public readonly id: number;
+    public name: string;
+
+    constructor(id: number, name: string){
+        this.id = id;
+        this.name = name;
+    }
+
+    scream(){
+        console.log(`${this.name.toUpperCase()}!!`)
+    }
+
+    speak(){
+        console.log(`${this.name}, ${this.name}!`)
+    }
+}
+```
+
+En el ejemplo anterior podemos ver que se esta cambiando el comportamiento de los metodos scream y speak de la clase pokemon al usar el decorador de ejemplo MyDecorator

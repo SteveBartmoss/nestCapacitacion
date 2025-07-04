@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 //forma tradicional
 export class Pokemon {
 
@@ -19,6 +21,13 @@ export class Pokemon {
 
     speack(){
         console.log(`${this.name}, ${this.name}`);
+    }
+
+    async getMoves(){
+        
+        const {data} = await axios.get('https://pokeapi.co/api/v2/pokemon/4');
+
+        return data.moves;
     }
     
 }

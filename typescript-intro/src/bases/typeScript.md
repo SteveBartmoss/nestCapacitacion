@@ -77,3 +77,23 @@ export class Pokemon {
     }
 }
 ```
+
+## Getters y metodos
+
+Una clase tanto en js como en ts puede tener getters y meotodos, que son funciones que en el caso de un get accede a propiedades de la case y las devuelve procesadas o con el mismo valor, un metodo es una funcion que se puede llamar desde una instancia de la clase.
+
+**ejemplo get**
+
+```ts
+get imageUrl(): string{
+    return `https://pokemon.com/${this.id}.jpg`;
+}
+```
+
+**ejemplo metodo**
+
+```ts
+get imageUrl(): string{
+    return `https://pokemon.com/${this.id}.jpg`;
+}
+```

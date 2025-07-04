@@ -402,3 +402,147 @@ export class Pokemon {
 ```
 
 De esta forma tenemos la inyeccion de la dependencia de terceros y tambien evitamos que se pueda romper el codigo a futuro
+
+## Principio de sustitucion de Liskov
+
+Como ts maneja un "tipo" de dato, en la inyeccion de dependencias que se menciona anterior mente nos puede afectar ya que al declarar a inyeccion de esta manera estamos dejando implicito el tipo de dato del adaptador si en algun momento se quiere mandar una clase diferente a la que definimos, esto nos da un error y con el principio de susticion resuelve esto, ejemplo
+
+```ts
+export class PokeApiFetchAdapter {
+    async getRequest<T>(url: string): Promise<T>{
+
+        const resp = await fetch(url);
+        const data: T = await resp.json();
+
+        return data;
+
+    }
+}
+
+export class PokeApiAdapter {
+
+    private readonly axios = axios;
+
+    async getRequest<T>(url: string): Promise<T>{
+        const {data} = await this.axios.get<T>(url);
+
+        return data
+    }
+
+    async postRequest<T>(url: string, data: any){
+        return
+    }
+
+    async patchRequest<T>(url: string, data: any){
+        return
+    }
+
+    async deleteRequest<T>(url: string){
+        return
+    }
+
+}
+```
+
+En este caso podemos ver que ambas clases son validas, pues una usa axios para hacer la peticion y la otra usa fetch, como ambas nos dan la respuesta necesaria no habria problema, pero estamos en ts asi que no podemos pasar una instancia de PokeApiFetchAdapter porque en realidad espera otro tipo de clase, para esto podemos definir una interface como la siguiente
+
+```ts
+
+export interface HttpAdapter {
+
+    getRequest<T>(url: string):Promise<T>
+
+}
+
+```
+
+Esta interface nos indica que al menos se debe contar con un metodo getRequest, sin importar el tipo de implementacion que haga el metodo, de esta forma no importa si usamos una instancia de PokeApiFetchAdapter ya que se implementa el metodo getRequest y eso es lo importante
+
+```ts
+import axios from 'axios';
+
+export interface HttpAdapter {
+
+    getRequest<T>(url: string):Promise<T>
+
+
+}
+
+export class PokeApiFetchAdapter implements HttpAdapter {
+    async getRequest<T>(url: string): Promise<T>{
+
+        const resp = await fetch(url);
+        const data: T = await resp.json();
+
+        return data;
+
+    }
+}
+
+export class PokeApiAdapter implements HttpAdapter {
+
+    private readonly axios = axios;
+
+    async getRequest<T>(url: string): Promise<T>{
+        const {data} = await this.axios.get<T>(url);
+
+        return data
+    }
+
+    async postRequest<T>(url: string, data: any){
+        return
+    }
+
+    async patchRequest<T>(url: string, data: any){
+        return
+    }
+
+    async deleteRequest<T>(url: string){
+        return
+    }
+
+}
+
+```
+
+Con las modificaciones en las diferentes clases ya podemos intercambiar instancias de las diferentes clases, ya que las dos implementan la interface que definimos anterior mente y solo se tiene que modificar la clase en la que hacemos la injecion de la dependencia
+
+```ts
+//forma tradicional
+export class Pokemon {
+
+    public readonly id: number;
+    public name: string;
+    private readonly http: HttpAdapter; 
+    
+
+    constructor(id: number, name: string, http: HttpAdapter){
+        this.id = id;
+        this.name = name;
+        //inyection de dependencia
+        this.http = http;
+    }
+
+    get imageUrl(): string{
+        return `https://pokemon.com/${this.id}.jpg`;
+    }
+
+    scream(){
+        console.log(`${this.name.toUpperCase()} !!!`);
+    }
+
+    speack(){
+        console.log(`${this.name}, ${this.name}`);
+    }
+
+    async getMoves(): Promise<Move[]> {
+        
+        const data = await this.http.getRequest<PokeAPIResponse>('https://pokeapi.co/api/v2/pokemon/4');
+
+        return data.moves;
+    }
+    
+}
+```
+
+En inyeccion de la dependencia ya no esparamos el tipo de clase especifico si no el tipo de interface que definimos, esto se conoce como el principio de susticion de liskov, y si bien resuelve un problema, habria que preguntarse que tan eficiente es resolver un problema que nosotros mismos creamos.

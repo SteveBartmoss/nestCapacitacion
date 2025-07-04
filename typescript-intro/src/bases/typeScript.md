@@ -97,3 +97,8 @@ get imageUrl(): string{
     return `https://pokemon.com/${this.id}.jpg`;
 }
 ```
+
+### Uso de this
+
+Es importante notar que en los metodos se esta usando el this, esto es porque en los metodos queremos referenciar los valores que tienen las instancias de la clase y no un valor estatico de clase, cuando se trabaja con clases y se crea una instancia, se puede ver como un contenedor, para acceder al contenido de un determinado contenedor se usa this.
+

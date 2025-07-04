@@ -599,3 +599,27 @@ export class Pokemon {
 ```
 
 En el ejemplo anterior podemos ver que se esta cambiando el comportamiento de los metodos scream y speak de la clase pokemon al usar el decorador de ejemplo MyDecorator
+
+### Ejemplo de un decorator mas funcional
+
+A continuacion se muestra la definicion de un decorador que puede ser mas util en caso de que se implemente
+
+```ts
+const Deprecated = (deprecationReason: string) => {
+    return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+        // Guardamos una referencia al método original
+        const originalMethod = descriptor.value;
+
+        // Modificamos el descriptor para cambiar el comportamiento del método
+        descriptor.value = function (...args: any[]) {
+            console.warn(`Method ${propertyKey} is deprecated with reason: ${deprecationReason}`);
+            // Llamamos al método original con el contexto correcto (this) y los argumentos
+            return originalMethod.apply(this, args);
+        };
+
+        return descriptor; // Retornamos el descriptor modificado
+    };
+};
+```
+
+Este decorador modifica el comportamiento de un metodo ya que no solo permite que la funcion siga funcionando si no que ademas muestra un warngin para indicar que el metodo esta en desuso

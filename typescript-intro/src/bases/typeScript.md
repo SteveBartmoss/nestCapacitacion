@@ -102,3 +102,15 @@ get imageUrl(): string{
 
 Es importante notar que en los metodos se esta usando el this, esto es porque en los metodos queremos referenciar los valores que tienen las instancias de la clase y no un valor estatico de clase, cuando se trabaja con clases y se crea una instancia, se puede ver como un contenedor, para acceder al contenido de un determinado contenedor se usa this.
 
+## Metodos asyncronos
+
+Un metodo asyncrono es como cualquier otro metodo pero con la diferencia de que tendra un proceso asyncrono dentro de el, en este caso se esta llamando una api para obtener informacion y esto es lo que hace referencia a un metodo asyncrono
+
+```ts
+async getMoves(){
+        
+    const {data} = await axios.get('https://pokeapi.co/api/v2/pokemon/4');
+
+    return data.moves;
+}
+```

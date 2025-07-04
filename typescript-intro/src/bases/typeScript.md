@@ -324,3 +324,81 @@ export interface Type {
 ```
 
 Aunque la interface resulta bastante extenda podemos crearla de manera simple con la extension Paste JSON as Code, de esta forma simplemente copiamos la respuesta generica y se creara la interface de forma automatica.
+
+## Inyeccion de dependencias
+
+Cuando trabajamos con codigo de terceros no debemos dejar el codigo implementando en cada clase, ya que esto creamos un error en caso de que llegue a cambiar el uso de codigo de terceros, por ejemplo si axios deja de usar simplemente .get por esto es mejor utilizar un adaptador que se inyecte como dependencia. 
+
+El adaptador tiene la siguiente forma 
+
+```ts
+import axios from 'axios';
+
+export class PokeApiAdapter{
+
+    private readonly axios = axios;
+
+    async getRequest(url: string){
+        const {data} = await this.axios.get(url);
+
+        return data
+    }
+
+    async postRequest(url: string, data: any){
+        return
+    }
+
+    async patchRequest(url: string, data: any){
+        return
+    }
+
+    async deleteRequest(url: string){
+        return
+    }
+
+}
+```
+
+Con esto ya tenemos la implementacion del codigo de terceros en una sola parte y en caso de tener que modificar algo solo se haria en esta parte del codigo, la forma de inyectar la dependencia seria la siguiente
+
+```ts
+import type { Move, PokeAPIResponse } from '../interfaces/pokeapi-response.interface';
+import { PokeApiAdapter } from '../api/pokeApi.adapter';
+
+export class Pokemon {
+
+    public readonly id: number;
+    public name: string;
+    private readonly http: PokeApiAdapter; 
+    
+
+    constructor(id: number, name: string, http: PokeApiAdapter){
+        this.id = id;
+        this.name = name;
+        //inyection de dependencia
+        this.http = http;
+    }
+
+    get imageUrl(): string{
+        return `https://pokemon.com/${this.id}.jpg`;
+    }
+
+    scream(){
+        console.log(`${this.name.toUpperCase()} !!!`);
+    }
+
+    speack(){
+        console.log(`${this.name}, ${this.name}`);
+    }
+
+    async getMoves(): Promise<Move[]> {
+        
+        const {data} = await this.http.getRequest('https://pokeapi.co/api/v2/pokemon/4');
+
+        return data.moves;
+    }
+    
+}
+```
+
+De esta forma tenemos la inyeccion de la dependencia de terceros y tambien evitamos que se pueda romper el codigo a futuro

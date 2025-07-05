@@ -65,5 +65,20 @@ Esta carpeta contiene librerias externas del proyecto, no se suele modificar ya 
 
 ## Modulos
 
+Agrupan y desacoplan un conjunto de funcionalidad especifica por dominio, por ejemplo auth.modules.ts, estaria encargado de todo lo relacionado a la autenticacion. Se puede pensar en un modulo como un subproyecto que esta acargo de toda la logica una parte del negocio, por ejemplo un modulo podria ser de clientes. El app.module.ts es el modulo raiz que se encarga de contener todos los demas modulos que podrian ser considerados como modulos hijos, este modulo riaz es llamado en el archivo main del proyecto que es el punto de entrada de todo el proyecto.
 
+Para crear un modulo se pueda usar el siguiente comando
 
+```bash
+nest g mo nombreModulo 
+```
+
+## Controladores
+
+Este apartado controla las rutas de la aplicacion, son los encargados de escuchar una solicitud y emitir una respueta a esa peticion, por ejemplo un controlador tendria las rutas necesarias para un crud. 
+
+Para crear un controlador se pueda usar el siguiente comando
+
+```bash
+nest g co nombreControlador
+```

@@ -141,3 +141,21 @@ getCarById( @Param('id', ParseIntPipe) id){
 ```
 
 Como se puede ver el pipe se tiene implementar dentro del decoradorr de Param para que pueda surtir efecto
+
+## Exception Filter
+
+Son los manejadores de errores que se muestan en la respuesta http, De manera predeterminar nest ya tiene una zona de exception que es funcional en la mayoria de los casos de uso, pero esto se puede expandir si tenemos alguna necesidad extra.
+
+```ts
+public findById(id: number){
+    const car = this.cars.find(elemet => elemet.id == id);
+
+    if(!car){
+        throw new NotFoundException(`Car with id '${id}' not found`);
+    }
+
+    return car;
+}
+```
+
+En el ejemplo anterior estamos usando un NotFoundException y ademas con un mensaje personalizado que nos muestra que es lo que salio mal

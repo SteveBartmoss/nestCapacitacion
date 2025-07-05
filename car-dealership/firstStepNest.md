@@ -126,3 +126,18 @@ export class CarsController {
 ```
 
 De esta forma se pueden usar los metodos del servicio car, pues en el constructos del controlador se esta inyectando la dependencia del servicio que permite usa los metodos del servicio
+
+## Pipes
+
+Ayudan a transformar la data que se recibe mediante una peticion o request, de esta manera nos aseguramos que el tipo, el valor o la instancia de objeto sea compatible o valido, de esta forma podemos por ejemplo transformar a enteros los parametros. 
+
+En el siguiente ejemplo se muestra una forma de implementar un pipe
+
+```ts
+@Get(':id')
+getCarById( @Param('id', ParseIntPipe) id){
+    return this.carsService.findById(id);
+}
+```
+
+Como se puede ver el pipe se tiene implementar dentro del decoradorr de Param para que pueda surtir efecto

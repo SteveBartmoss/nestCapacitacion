@@ -82,3 +82,47 @@ Para crear un controlador se pueda usar el siguiente comando
 ```bash
 nest g co nombreControlador
 ```
+
+## Servicios
+
+Contiene toda la logica del negocio de tal manera que sea reutilizable mediante inyeccion de dependencias, por ejemplo un servicio de clientes tendra toda las funciones para guardar un cliente, obtener clientes, modificar un cliente entre otras funciones que sean necesarios para manejar la logica de negocio del cliente. Los servicios siempre seran providers, de manera que se se tienen que inyectar.
+
+Para crear un servicio se puede usar el siguiente comando
+
+
+```bash
+nest g s cars --no-spec
+```
+
+**Nota**
+
+El argumento extra de --no-spec se puede usar  evitar que se cree el archivo de pruebas y se puede usar tambien en otros comandos de creacion
+
+## Inyeccion de depencias
+
+Como los servicios deben ser inyectables y de hecho tienen la propiedad inyectable, debemos inyectarlo en el controlador como se muestra a continuacion.
+
+```ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { CarsService } from './cars.service';
+
+@Controller('cars')
+export class CarsController {
+
+    constructor(
+        private readonly carsService: CarsService
+    ){}
+
+    @Get()
+    getAllCars(){
+        return this.carsService.findAll();
+    }
+
+    @Get(':id')
+    getCarById( @Param('id') id){
+        return this.carsService.findById(parseInt(id));
+    }
+}
+```
+
+De esta forma se pueden usar los metodos del servicio car, pues en el constructos del controlador se esta inyectando la dependencia del servicio que permite usa los metodos del servicio

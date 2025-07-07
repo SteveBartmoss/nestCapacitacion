@@ -32,9 +32,6 @@ export class CarsController {
 
     @Delete(':id')
     deleteCar(@Param('id') id){
-        return {
-            method: 'delete',
-            id: id
-        }
+        return this.carsService.deleteCar(id)
     }
 }

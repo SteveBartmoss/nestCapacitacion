@@ -60,7 +60,7 @@ createCar(@Body() createCarDto: CreateCarDto){
 
 # Validation pipe
 
-Cuando implementamos un dto no es suficiente para validar que la informacion siga la estructura, pues si bien tenemos definida la estructura no tenemos establecido que se valide el dto que usamos asi que debemos utilizr el validation pipe
+Cuando implementamos un dto no es suficiente para validar que la informacion siga la estructura, pues si bien tenemos definida la estructura no tenemos establecido que se valide el dto que usamos asi que debemos utilizar el validation pipe
 
 ```ts
 @Post()

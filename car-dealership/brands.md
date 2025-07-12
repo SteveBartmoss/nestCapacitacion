@@ -90,3 +90,17 @@ export class SeedService {
 
 }
 ```
+
+## Generar build de produccion basico
+
+para generar un build de produccion basico se puede utilizar el siguiente comando
+
+```bash
+yarn build
+```
+
+Cuando tenemo el build generado simplemente usamos el siguiente comando para correr el buil de produccion
+
+```bash
+yarn start:prod
+```

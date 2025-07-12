@@ -52,3 +52,27 @@ async function bootstrap() {
 }
 bootstrap();
 ```
+
+## Docker configuracion
+
+Para manejar la imagen de mongoDB desde docker lo podemos hacer con el siguiente archivo de dockerCompose
+
+```yaml
+services:
+  db:
+    image: mongo:5
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGODB_DATABASE: nest-pokemon
+    volumes:
+      - ./mongo:/data/db
+```
+
+Cuando ya tenemos configurado el archivo yaml podemos levantar la instancia de la base de datos con el comando 
+
+
+```bash
+docker-compose up -d
+```

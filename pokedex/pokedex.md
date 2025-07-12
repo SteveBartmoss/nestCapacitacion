@@ -167,3 +167,95 @@ export class PokemonModule {}
 
 En este archivo debemos hacer la carga del schema y de la entidad en la siguiente linea `imports: [MongooseModule.forFeature([{name: Pokemon.name, schema: PokemonSchema,} ])]` realizando las importaciones correspondientes del archivo entity, con esto le indicamos a la base de donde tomar la configuracion del schema
 
+## Inserccion de la informacion en la base de datos
+
+Como ya tenemos configurada toda la conexion hacia la base de datos y las validaciones, podemos crear la informacion en base de datos de la siguiente manera
+
+```ts
+import { Injectable } from '@nestjs/common';
+import { CreatePokemonDto } from './dto/create-pokemon.dto';
+import { UpdatePokemonDto } from './dto/update-pokemon.dto';
+import { Model } from 'mongoose';
+import { Pokemon } from './entities/pokemon.entity';
+import { InjectModel } from '@nestjs/mongoose';
+
+@Injectable()
+export class PokemonService {
+
+  constructor(
+
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>
+
+  ){}
+
+  async create(createPokemonDto: CreatePokemonDto) {
+    createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
+
+    const pokemon = await this.pokemonModel.create(createPokemonDto);
+
+    return pokemon;
+
+  }
+
+}
+```
+
+En el service de pokemon, inyectamos el schema que ya habiamos configurado y como siempre la inyeccion de la dependencia la realizamos en el constructor pero hay que notar algo en el siguiente ejemplo
+
+```ts
+@Injectable()
+export class PokemonService {
+
+  constructor(
+
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>
+
+  ){}
+
+}
+```
+
+Al schema que pasamos al constructor le tenemos que agregar el decorador `@InjectModel(Pokemon.name)` ya que por defecto los schemas de pokemon no son inyectables, ademas de que debemos mandarle el name de la clase para que se pueda resolver la inyeccion del schema, por lo demas simplemente configuramos la inyeccion de la siguimente manera `private readonly pokemonModel: Model<Pokemon>` para despues realizar la insercion en la siguiente funcion
+
+```ts
+@Injectable()
+export class PokemonService {
+
+  async create(createPokemonDto: CreatePokemonDto) {
+    createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
+
+    const pokemon = await this.pokemonModel.create(createPokemonDto);
+
+    return pokemon;
+
+  }
+
+}
+```
+
+Es importante notar que el guardado en la base de datos es asyncrono y por eso debemos usar el await y resolver la promesa que nos devuelve
+
+## Responde un error 
+
+Cuando ocurre un error, por defecto nest arroja un error generico como 500 internar server error, ya que la capa de nest toma la excepcion y hace lo mejor que puede para regresar un error, pero se puede mandar un error mas util de la siguiente manera 
+
+```ts
+async create(createPokemonDto: CreatePokemonDto) {
+    createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
+
+    try{
+
+      const pokemon = await this.pokemonModel.create(createPokemonDto);
+      return pokemon;
+    } catch (error){
+      console.log(error)
+
+      throw new BadRequestException(`code: ${error.code} keyValue: ${JSON.stringify(error.keyValue) } message: ${error.errorResponse.errmsg} `)
+    }
+
+  }
+```
+
+De esta manera el bloque trycatch captura la exception de la inserccion a base de datos y regresamos el error para el usuario que es mas claro y permite identificar que es lo que salio mal 

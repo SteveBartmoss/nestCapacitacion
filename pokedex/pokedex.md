@@ -259,3 +259,34 @@ async create(createPokemonDto: CreatePokemonDto) {
 ```
 
 De esta manera el bloque trycatch captura la exception de la inserccion a base de datos y regresamos el error para el usuario que es mas claro y permite identificar que es lo que salio mal 
+
+## Buscar un pokemon por no, name o mongoId
+
+ya que tenemos configurado el schema para la base de datos podemos usarlo para buscar dentro de la base de la siguiente manera
+
+```ts
+async findOne(term: string) {
+
+    let pokemon: Pokemon | null = null;
+
+      if(!isNaN(+term)){
+        pokemon = await this.pokemonModel.findOne({no: term});
+
+      }
+
+      if(!pokemon && isValidObjectId(term)){
+        pokemon = await this.pokemonModel.findById(term);
+      }
+
+      if (!pokemon){
+        pokemon = await this.pokemonModel.findOne({name: term.toLocaleLowerCase().trim()})
+      }
+
+      if(!pokemon){
+        throw new NotFoundException(`Pokemon with id, name or no "${term}" not found `)
+      }
+
+      return pokemon;
+    
+  }
+```

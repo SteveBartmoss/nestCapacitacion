@@ -25,3 +25,30 @@ import { join } from 'path';
 })
 export class AppModule {}
 ```
+
+
+## Prepara api inicial
+
+Para poder tener el esqueleto principal de la api sin tener que hacer todo manual, podemos crearla con el siguiente comando
+
+```bash
+nest g res pokemon --no-spec
+```
+
+## Prefix Global
+
+Si queremos que las url de nuestra aplicacion siempre contengan algun prefijo, como por ejemplo `api/pro` podemos hacerlo con la siguiente configuracion del archivo main
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('api')
+
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```

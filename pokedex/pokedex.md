@@ -314,3 +314,21 @@ private handleExeptions(error: any){
     throw new InternalServerErrorException(`Cant create Pokemon - Check server logs`);
 }
 ```
+
+## Eliminar un pokemon 
+
+Nuevamente utilizamos el modelo para eliminar el registro de la base de datos como se puede mostrar en el siguiente ejemplo
+
+```ts
+async remove(id: string) {
+
+    const pokemon = await this.findOne(id);
+
+    await pokemon.deleteOne()
+
+    return `This action removes a #${id} pokemon`;
+    
+}
+```
+
+Como se hizo antes, reutilizamos el codigo que ya creamos para evitar repetir codigo

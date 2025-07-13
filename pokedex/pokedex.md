@@ -303,7 +303,7 @@ async update(term: string, updatePokemonDto: UpdatePokemonDto) {
   }
 ```
 
-Se reutiliza el codigo para buscar un pokemon por name, mongoDb o no, tambien se manejo el error de una forma simple pero si se desea se puede implementar una funcion como la siguiente para capturar exceptiones sin repetir codigo 
+Se reutiliza el codigo para buscar un pokemon por name, mongoDb o no, tambien se manejo el error de una forma simple pero si se desea se puede implementar una funcion como la siguiente para capturar exceptiones sin repetir codigo
 
 ```ts
 private handleExeptions(error: any){
@@ -315,20 +315,68 @@ private handleExeptions(error: any){
 }
 ```
 
-## Eliminar un pokemon 
+## Eliminar un pokemon
 
 Nuevamente utilizamos el modelo para eliminar el registro de la base de datos como se puede mostrar en el siguiente ejemplo
 
 ```ts
-async remove(id: string) {
+  async remove(id: string) {
 
-    const pokemon = await this.findOne(id);
+    //const pokemon = await this.findOne(id);
+    // await pokemon.deleteOne();
+    //const result = await this.pokemonModel.findByIdAndDelete(id);
 
-    await pokemon.deleteOne()
+    const {deletedCount} = await this.pokemonModel.deleteOne({_id: id});
 
-    return `This action removes a #${id} pokemon`;
-    
-}
+    if( deletedCount == 0){
+      throw new BadRequestException(`Pokemon with id "${id}" not found`)
+    }
+
+    return `This action removes a id "${id}" pokemon`;
+
+  }
 ```
 
 Como se hizo antes, reutilizamos el codigo que ya creamos para evitar repetir codigo
+
+## Custom pipe
+
+Como no siempre existe un pipe de nest que permite validar que sea un mongoId valido pero podemos crear un customPipe por nuestra cuenta con el siguiente comando
+
+```bash
+nest g pi common/pipes/parseMongoId --no-spec
+```
+
+De esta forma nos crea el pipe en la carpeta `common/pipes` que es donde normalmente se colocan, el pipe quedaria con la siguiente forma
+
+```ts
+import {
+  ArgumentMetadata,
+  BadRequestException,
+  Injectable,
+  PipeTransform,
+} from '@nestjs/common';
+import { isValidObjectId } from 'mongoose';
+
+@Injectable()
+export class ParseMongoIdPipe implements PipeTransform {
+  transform(value: string, metadata: ArgumentMetadata) {
+    if (!isValidObjectId(value)) {
+      throw new BadRequestException(`${value} is not a valid MongoID`);
+    }
+
+    return value;
+  }
+}
+```
+
+La mayoria del codigo fue generado por el comando, lo que podemos trabajar con el pipe es el value y la metadata, ambos valores tienen el siguiente aspecto
+
+```ts
+{
+  value: '2',
+  metadata: { metatype: [Function: String], type: 'param', data: 'id' }
+}
+```
+
+En el value obtenemos el valor crudo del parametro de la ruta y en la metada data obtenemos diferente informacion, como tenemos el value solamente tenemos que validar que el value sea un mongoID valido como se hizo anteriormente

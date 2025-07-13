@@ -1,6 +1,6 @@
 ## Servir contenido estatico
 
-Podemos servir una pagina estatica de prueba en el proyecto de nest, si queremos mostrar alguna pagina de ayuda o simplemente algo de contenido 
+Podemos servir una pagina estatica de prueba en el proyecto de nest, si queremos mostrar alguna pagina de ayuda o simplemente algo de contenido
 cuando visitan la url en el navegador si instalamos el siguiente modulo con el comando
 
 ```bash
@@ -17,15 +17,14 @@ import { join } from 'path';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname,'..','public'),
-    })
+      rootPath: join(__dirname, '..', 'public'),
+    }),
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
 ```
-
 
 ## Prepara api inicial
 
@@ -46,7 +45,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api');
 
   await app.listen(process.env.PORT ?? 3000);
 }
@@ -70,8 +69,7 @@ services:
       - ./mongo:/data/db
 ```
 
-Cuando ya tenemos configurado el archivo yaml podemos levantar la instancia de la base de datos con el comando 
-
+Cuando ya tenemos configurado el archivo yaml podemos levantar la instancia de la base de datos con el comando
 
 ```bash
 docker-compose up -d
@@ -94,14 +92,13 @@ import { join } from 'path';
 import { PokemonModule } from './pokemon/pokemon.module';
 import { MongooseModule } from '@nestjs/mongoose';
 
-
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname,'..','public'),
+      rootPath: join(__dirname, '..', 'public'),
     }),
     MongooseModule.forRoot('mongodb://localhost:27017/nest-pokemon'),
-    PokemonModule
+    PokemonModule,
   ],
   controllers: [],
   providers: [],
@@ -116,27 +113,24 @@ Con esto logramos hacer la conexion a la base de datos que se configuro en el mi
 Cuando se trabaja con la base de datos como puede ser mongo, debemos configurar el schema para poder indicar que estructura tendra la informacion que se guarda en la base de datos, para lograr esto debemos hacerlo en archivo `pokemon.entity.ts` que debe estar en la carpeta entities que nos genera nest si usamos el comando resource, el archivo deberia queda como el siguiente ejemplo
 
 ```ts
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 @Schema()
 export class Pokemon extends Document {
-
-    @Prop({
-        unique: true,
-        index: true,
-    })
-    name: string;
-    @Prop({
-        unique: true,
-        index: true,
-    })
-    no: number;
-
+  @Prop({
+    unique: true,
+    index: true,
+  })
+  name: string;
+  @Prop({
+    unique: true,
+    index: true,
+  })
+  no: number;
 }
 
 export const PokemonSchema = SchemaFactory.createForClass(Pokemon);
-
 ```
 
 Primero es importante notar que el archivo contiene el decorador `@Schema()` el cual indica que se trata de una clase que trabaja con la base de datos, tambien se debe notar que el archivo extiende de `Document` que proviene del paquete que antes se instalo mongoose. Dentro de la clase se define la estructrua que tendra la informacio guardada como el nombre o el numero de pokemon, pero ademas con el decorador `@Prop({unique: true,index: true,})` le indicamos a la base de datos que el campo es unico y que debe ser manejado como indice, nuevamente el decorador viene de los paquetes instalados previamente. Por ultimo debemos exponer el schema con la exportacion del mismo de la siguiente manera `export const PokemonSchema = SchemaFactory.createForClass(Pokemon);`
@@ -155,12 +149,14 @@ import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
 @Module({
   controllers: [PokemonController],
   providers: [PokemonService],
-  imports: [MongooseModule.forFeature([
-    {
-      name: Pokemon.name,
-      schema: PokemonSchema,
-    } 
-  ])]
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: Pokemon.name,
+        schema: PokemonSchema,
+      },
+    ]),
+  ],
 })
 export class PokemonModule {}
 ```
@@ -181,13 +177,10 @@ import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class PokemonService {
-
   constructor(
-
     @InjectModel(Pokemon.name)
-    private readonly pokemonModel: Model<Pokemon>
-
-  ){}
+    private readonly pokemonModel: Model<Pokemon>,
+  ) {}
 
   async create(createPokemonDto: CreatePokemonDto) {
     createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
@@ -195,9 +188,7 @@ export class PokemonService {
     const pokemon = await this.pokemonModel.create(createPokemonDto);
 
     return pokemon;
-
   }
-
 }
 ```
 
@@ -206,14 +197,10 @@ En el service de pokemon, inyectamos el schema que ya habiamos configurado y com
 ```ts
 @Injectable()
 export class PokemonService {
-
   constructor(
-
     @InjectModel(Pokemon.name)
-    private readonly pokemonModel: Model<Pokemon>
-
-  ){}
-
+    private readonly pokemonModel: Model<Pokemon>,
+  ) {}
 }
 ```
 
@@ -222,24 +209,21 @@ Al schema que pasamos al constructor le tenemos que agregar el decorador `@Injec
 ```ts
 @Injectable()
 export class PokemonService {
-
   async create(createPokemonDto: CreatePokemonDto) {
     createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
 
     const pokemon = await this.pokemonModel.create(createPokemonDto);
 
     return pokemon;
-
   }
-
 }
 ```
 
 Es importante notar que el guardado en la base de datos es asyncrono y por eso debemos usar el await y resolver la promesa que nos devuelve
 
-## Responde un error 
+## Responde un error
 
-Cuando ocurre un error, por defecto nest arroja un error generico como 500 internar server error, ya que la capa de nest toma la excepcion y hace lo mejor que puede para regresar un error, pero se puede mandar un error mas util de la siguiente manera 
+Cuando ocurre un error, por defecto nest arroja un error generico como 500 internar server error, ya que la capa de nest toma la excepcion y hace lo mejor que puede para regresar un error, pero se puede mandar un error mas util de la siguiente manera
 
 ```ts
 async create(createPokemonDto: CreatePokemonDto) {
@@ -258,7 +242,7 @@ async create(createPokemonDto: CreatePokemonDto) {
   }
 ```
 
-De esta manera el bloque trycatch captura la exception de la inserccion a base de datos y regresamos el error para el usuario que es mas claro y permite identificar que es lo que salio mal 
+De esta manera el bloque trycatch captura la exception de la inserccion a base de datos y regresamos el error para el usuario que es mas claro y permite identificar que es lo que salio mal
 
 ## Buscar un pokemon por no, name o mongoId
 
@@ -287,6 +271,46 @@ async findOne(term: string) {
       }
 
       return pokemon;
-    
+
   }
+```
+
+## Actualizar un pokemon
+
+Al igual que antes para actualizar un dato en la base podemo usar el modelo como se muestra a continuacion
+
+```ts
+async update(term: string, updatePokemonDto: UpdatePokemonDto) {
+
+    const pokemon = await this.findOne(term);
+
+    if(updatePokemonDto.name){
+      updatePokemonDto.name = updatePokemonDto.name.toLocaleLowerCase();
+    }
+
+    try{
+
+      await pokemon.updateOne(updatePokemonDto)
+
+      return {...pokemon.toJSON(), ...updatePokemonDto}
+
+    }catch(error){
+
+      console.log(error)
+
+      throw new BadRequestException(`code: ${error.code} keyValue: ${JSON.stringify(error.keyValue) } message: ${error.errorResponse.errmsg} `)
+    }
+  }
+```
+
+Se reutiliza el codigo para buscar un pokemon por name, mongoDb o no, tambien se manejo el error de una forma simple pero si se desea se puede implementar una funcion como la siguiente para capturar exceptiones sin repetir codigo 
+
+```ts
+private handleExeptions(error: any){
+    if(error.code === 1100){
+      throw new BadRequestException(`Pokemon eixists in db ${JSON.stringify(error.keyValue)} `);
+    }
+    console.log(error);
+    throw new InternalServerErrorException(`Cant create Pokemon - Check server logs`);
+}
 ```

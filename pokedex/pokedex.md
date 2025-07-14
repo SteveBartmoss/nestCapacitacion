@@ -380,3 +380,13 @@ La mayoria del codigo fue generado por el comando, lo que podemos trabajar con e
 ```
 
 En el value obtenemos el valor crudo del parametro de la ruta y en la metada data obtenemos diferente informacion, como tenemos el value solamente tenemos que validar que el value sea un mongoID valido como se hizo anteriormente
+
+## Generar seed
+
+Igual que en modulos anteriores vamos a crear un modulo de seed para llenar la base de datos en caso de no contar con algo en la base de datos. asi que podemos hacerlo con el comando 
+
+```bash
+nest g res seed --no-spec
+```
+
+Con esto se genera un resource llamado seed, del que solo necesitamos el module, controler y el service, lod otros elementos se pueden retirar y ademas solo necesitamos una ruta get y un metodo executeSeed en el service

@@ -390,3 +390,168 @@ nest g res seed --no-spec
 ```
 
 Con esto se genera un resource llamado seed, del que solo necesitamos el module, controler y el service, lod otros elementos se pueden retirar y ademas solo necesitamos una ruta get y un metodo executeSeed en el service
+
+## Inyecccion de dependencias
+
+Como se realizo antes, podemos reutilizar el codigo de los servicios de pokemon para poder crear un pokemon, de esta forma podemos inyectar el metodo crear pokemon desde el servicio de la siguiente forma
+
+```ts 
+import { Injectable } from '@nestjs/common';
+import axios, { AxiosInstance } from 'axios';
+import { PokeResponse } from './interfaces/poke-response.interface';
+import { PokemonService } from 'src/pokemon/pokemon.service';
+import { CreatePokemonDto } from 'src/pokemon/dto/create-pokemon.dto';
+
+@Injectable()
+export class SeedService {
+
+  constructor(
+    private readonly pokemonService: PokemonService,
+  ){}
+
+  private readonly axios: AxiosInstance = axios;
+
+  async executeSeed(){
+
+    let pokeCreate = new CreatePokemonDto()
+
+    const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=10')
+
+    data.results.forEach(async (element)=>{
+
+      const segments = element.url.split('/');
+      const no = +segments[segments.length-2]
+
+      pokeCreate.name = element.name
+      pokeCreate.no = no
+
+      await this.pokemonService.create(pokeCreate)
+
+    })
+
+    return 'Seed Executed';
+
+  }
+}
+```
+
+De esta forma estamos inyectando la funcion del servicio pokemon en el servio de seed con las correspondientes exports e imports en los modulos
+
+### pokemon.module
+
+```ts
+import { Module } from '@nestjs/common';
+import { PokemonService } from './pokemon.service';
+import { PokemonController } from './pokemon.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
+
+@Module({
+  controllers: [PokemonController],
+  providers: [PokemonService],
+  imports: [MongooseModule.forFeature([
+    {
+      name: Pokemon.name,
+      schema: PokemonSchema,
+    } 
+  ])],
+  exports: [PokemonService],
+})
+export class PokemonModule {}
+```
+
+
+### seed.module
+
+```ts
+import { Module } from '@nestjs/common';
+import { SeedService } from './seed.service';
+import { SeedController } from './seed.controller';
+import { PokemonModule } from 'src/pokemon/pokemon.module';
+
+@Module({
+  controllers: [SeedController],
+  providers: [SeedService],
+  imports: [PokemonModule],
+})
+export class SeedModule {}
+```
+
+De esta forma podemos insertar en la base de datos, pero el curso esperaba una implementacion diferente que es la siguiente
+
+```ts
+import { Injectable } from '@nestjs/common';
+import axios, { AxiosInstance } from 'axios';
+import { PokeResponse } from './interfaces/poke-response.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
+import { Model } from 'mongoose';
+
+@Injectable()
+export class SeedService {
+
+  constructor(
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>
+  ){}
+
+  private readonly axios: AxiosInstance = axios;
+
+  async executeSeed(){
+
+    const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=10')
+
+    data.results.forEach(async (element)=>{
+
+      const segments = element.url.split('/');
+      const no = +segments[segments.length-2]
+
+      await this.pokemonModel.create({name: element.name, no})
+
+    })
+
+    return 'Seed Executed';
+
+  }
+}
+
+```
+
+En el curso inyectan un modelo que se usa para las insercciones en base de datos, creo que es debido a que muestran la forma de inyectar un modelo, cuando tenemos esta configuracion, igual debemos exportar el modelo en el `pokemon.module` de la siguiente manera
+
+```ts
+import { Module } from '@nestjs/common';
+import { PokemonService } from './pokemon.service';
+import { PokemonController } from './pokemon.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
+
+@Module({
+  controllers: [PokemonController],
+  providers: [PokemonService],
+  imports: [MongooseModule.forFeature([
+    {
+      name: Pokemon.name,
+      schema: PokemonSchema,
+    } 
+  ])],
+  exports: [MongooseModule],
+})
+export class PokemonModule {}
+```
+
+De esta forma podemos hacer la inyeccion de la dependencia en el servicio del seed con la correspondiente importacion del `pokemon.module`
+
+```ts
+import { Module } from '@nestjs/common';
+import { SeedService } from './seed.service';
+import { SeedController } from './seed.controller';
+import { PokemonModule } from 'src/pokemon/pokemon.module';
+
+@Module({
+  controllers: [SeedController],
+  providers: [SeedService],
+  imports: [PokemonModule],
+})
+export class SeedModule {}
+```

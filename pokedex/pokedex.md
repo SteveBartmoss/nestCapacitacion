@@ -555,3 +555,127 @@ import { PokemonModule } from 'src/pokemon/pokemon.module';
 })
 export class SeedModule {}
 ```
+
+El codigo anterior permite la insercion en base de datos pero realiza una insercion en cada ciclo del for, y con la siguiente forma, todas las inserciones se hacen al mismo tiempo:
+
+```ts
+async executeSeed(){
+
+    await this.pokemonModel.deleteMany({})
+
+    const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=10')
+
+    const insertPromisesArray: Promise<any>[] = [];
+
+    data.results.forEach((element)=>{
+
+      const segments = element.url.split('/');
+      const no = +segments[segments.length-2]
+
+      insertPromisesArray.push(
+        this.pokemonModel.create({name: element.name, no})
+      );
+
+    });
+
+    await Promise.all(insertPromisesArray);
+
+    return 'Seed Executed';
+
+  }
+```
+
+De esta forma todas las promesas se resuelven al mismo tiempo en lugar de esta haciendo una promesa cada iteracion del for, pero aun existe una mejor alternativa y es la siguiente
+
+```ts
+async executeSeed(){
+
+    await this.pokemonModel.deleteMany({})
+
+    const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=650')
+
+    const pokemonToInsert: CreatePokemonDto[] = []
+
+    data.results.forEach((element)=>{
+
+      const segments = element.url.split('/');
+      const no = +segments[segments.length-2]
+
+      pokemonToInsert.push({name: element.name, no})
+
+    });
+
+    await this.pokemonModel.insertMany(pokemonToInsert);
+
+    return 'Seed Executed';
+
+  }
+```
+
+Con esta nueva forma le dejamos el trabajo de insercion directamentamente al gestor de la base de datos, esto es mas eficiente porque solo se arma el arreglo de objetos y despues se manda al gestor la informacion para que se almacene de una sola vez
+
+## Custom provider
+
+En el modulo de seed, se dejo la dependencia de la liberia de axios y esto no es una buena practica ya que si bien no se esta usando axios en ninguna otra parte del codigo no se deben dejar dependencias asi en los modulos porque eso daria muchos conflictos cuando se implemente en diferentes partes y se quiera dejar de usar axios o se cambie la forma en que se usa axios, por esta razon definimos una nueva `http-adapter-interface` y un nuevo `axios.adapter` que permitan quitar la dependencia directa con axios, el contenido seria el siguiente:
+
+```ts
+export interface HttpAdapter{
+    get<T>(url: string): Promise<T>
+}
+```
+
+En la interface simplemente definimos que cualquiera que extienda de la clase httpAdapter debe implementar la funcion `get()` con esto nos aseguramos que cualquier adaptador que extendia de esta interface implemente la misma funcion, ahora debemo implementar el adaptador para axios
+
+```ts
+import axios, { AxiosInstance } from "axios";
+import { HttpAdapter } from "../interfaces/http-adapter.interface";
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class AxiosAdapter implements HttpAdapter{
+    private axios: AxiosInstance = axios;
+
+    async get<T>(url: string): Promise<T>{
+        try{
+            const {data} = await this.axios.get<T>(url);
+            return data;
+        }catch(error){
+            throw new Error('This is an error - Check logs');
+        }
+    }
+}
+```
+
+De esta forma la dependencia de axios solo esta presente en este adaptador, tambiene extendemos la interface HttpAdapter y realizamos la implementacion de la funcion, aqui es donde colocamos la peticion por axios para recuperar la informacion de la api. Finalmente agregamos el decorador `@Injectable()` para hacer que este adaptador sea inyectable en el constructor donde queremos usar el adptadpr como se muestra a continuacion
+
+
+### exportacion en el common modules
+
+```ts
+import { Module } from '@nestjs/common';
+import { AxiosAdapter } from './adapters/axios.adapter';
+
+@Module({
+    providers: [AxiosAdapter],
+    exports: [AxiosAdapter],
+})
+export class CommonModule {}
+```
+
+
+### importacion en seed module
+
+```ts
+import { Module } from '@nestjs/common';
+import { SeedService } from './seed.service';
+import { SeedController } from './seed.controller';
+import { PokemonModule } from 'src/pokemon/pokemon.module';
+import { CommonModule } from 'src/common/common.module';
+
+@Module({
+  controllers: [SeedController],
+  providers: [SeedService],
+  imports: [PokemonModule,CommonModule],
+})
+export class SeedModule {}
+```

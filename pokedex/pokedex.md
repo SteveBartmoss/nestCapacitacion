@@ -756,5 +756,26 @@ async function bootstrap() {
 }
 ```
 
-En el archivo `main` agregamos una configuracion global al useGlobalPipes para indicar que la transformacion este actica y en las transformOptions deshabilitamos la conversion implicita
+En el archivo `main` agregamos una configuracion global al useGlobalPipes para indicar que la transformacion este actica y en las transformOptions deshabilitamos la conversion implicita, con esto ya podemos usar los parametros para la paginacion en el servicio para poder entregar cierta cantidad de pokemnos
 
+```ts
+@Injectable()
+export class PokemonService {
+
+  constructor(
+
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>
+
+  ){}
+
+  async findAll(paginationDto: PaginationDto) {
+
+    const {limit = 10, offset = 0} = paginationDto;
+    
+    return await this.pokemonModel.find().limit(limit).skip(offset).sort({no: 1}).select('-__v')
+    
+  }
+
+}
+```

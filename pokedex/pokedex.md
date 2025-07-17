@@ -679,3 +679,82 @@ import { CommonModule } from 'src/common/common.module';
 })
 export class SeedModule {}
 ```
+
+## Paginacion de pokemons
+
+Para que la respuesta de la api no resulte tan gigante, se puede implementar una paginacion pero para esto debemos crear los query parameters en el copntrolador y pasarlos al servicio, primero configuramos el dto para los query parameters que pasaremos al endpoint para obtener todos los pokemons
+
+```ts
+import { IsOptional, IsPositive, Min } from "class-validator";
+
+export class PaginationDto{
+    @IsOptional()
+    @IsPositive()
+    @Min(1)
+    limit: number;
+
+    @IsOptional()
+    @IsPositive()
+    offset: number;
+}
+```
+
+Con esto ya podemos hacer la implementacion en el modulo y el servicio
+
+```ts
+@Controller('pokemon')
+export class PokemonController {
+  constructor(private readonly pokemonService: PokemonService) {}
+
+  @Get()
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.pokemonService.findAll(paginationDto);
+  }
+
+}
+
+```
+
+```ts
+@Injectable()
+export class PokemonService {
+
+  constructor(
+
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>
+
+  ){}
+
+  async findAll(queryParameters: PaginationDto) {
+    return await this.pokemonModel.find();
+  }
+
+}
+```
+
+### Transform DTOs
+
+Por defecto nest hace una transformacion de los parametros de la url a string, pero en algunos casos no queremos que esto pase asi que podemos cancelar esta cansalacion de la siguiente manera
+
+```ts
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('api')
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      }
+    }),
+  )
+  await app.listen(process.env.PORT ?? 3000);
+}
+```
+
+En el archivo `main` agregamos una configuracion global al useGlobalPipes para indicar que la transformacion este actica y en las transformOptions deshabilitamos la conversion implicita
+

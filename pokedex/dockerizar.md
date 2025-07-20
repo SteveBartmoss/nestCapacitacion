@@ -271,3 +271,18 @@ CMD ["yarn","start"]
 ```
 
 Esto es una configuracion simple y reducida de lo que debe tener un dockerfile
+
+```yaml
+version: '3'
+
+services: 
+  pokedexapp:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfiles
+    image: pokedex-docker
+    container_name: pokedexapp
+
+```

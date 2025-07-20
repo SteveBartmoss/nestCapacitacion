@@ -76,3 +76,47 @@ export class AppModule {}
 ```
 
 Con esto tenemos configurada la conexion hacia postgres
+
+## Crear endpoint para productos
+
+Pata tener el esqueleto de la base del modulo de productos, podemos usar el siguiente comando 
+
+```bash
+nest g res products --no-spec
+```
+
+Seleccionamos __API rest__ y y __Yes__ para que se generen los puntos de entrada y podemos configurar el entity del producto como se ve a continuacion
+
+```ts
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+@Entity()
+export class Product {
+
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column('text',{
+        unique: true,
+    })
+    title: string;
+    
+}
+```
+
+Con esto tenemos configurado el entity del producto pero ahora debemos importarlo en el archivo __product.module__ para que sea reconocido por el ORM y se sincronice con la base de datos, para esto lo hacemos de la siguite manera
+
+```ts
+...
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Product } from './entities/product.entity';
+
+@Module({
+  controllers: [ProductsController],
+  providers: [ProductsService],
+  imports: [
+    TypeOrmModule.forFeature([Product])
+  ]
+})
+export class ProductsModule {}
+```

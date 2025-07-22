@@ -28,3 +28,9 @@ docker-compose up -d
 ```bash
 yarn start:dev
 ```
+
+7. Ejecutar SEED para llenar la base de datos en pruebas con la siguiente peticion http
+
+```bash
+http://localhost:3000/api/products
+```

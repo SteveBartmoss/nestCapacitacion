@@ -266,3 +266,208 @@ export class ProductsService {
 ```
 
 Con esto cambiamos la funcion que se llama en controlador ya que se tiene que llamar esta funcion intermediaria
+
+## Querry Runner
+
+Como se agrego un campo en forma de relacion para las imagenes, tenemos que modificar el proceso de actualizacion, de esta forma tenemos que realizar lo siguiente
+
+```ts
+@Injectable()
+export class ProductsService {
+    ...
+  constructor(
+    @InjectRepository(Product)
+    private readonly productRespository: Repository<Product>,
+
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource,
+
+  ){}
+  ...
+}
+```
+
+primero creamon una nueva instancia de un datasource, que es un objeto que nos permite establecer conexion con base de datos, iniciar y completar transacciones y en general realizar modificaciones a la base de datos pero de una forma mas ordenada y segura. Despues realizamos la modificacion en el metodo para la actualizacion como se muestra a continuacion
+
+```ts
+@Injectable()
+export class ProductsService {
+
+    ...
+    async update(id: string, updateProductDto: UpdateProductDto) {
+
+        const {images, ...toUpdate} = updateProductDto;
+
+        const product = await this.productRespository.preload({
+        id: id,
+        ...toUpdate,
+        });
+
+        if(!product){
+        throw new NotFoundException(`Product with id: ${id} not found`)
+        } 
+
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction()
+        
+        try{
+
+        if(images){
+            await queryRunner.manager.delete( ProductImage,{product: {id}})
+
+            product.images = images.map(image => this.productImageRepository.create({url: image}))
+        } 
+
+        await queryRunner.manager.save(product)
+        await queryRunner.commitTransaction()
+        await queryRunner.release()
+        
+        return this.finOnePlain(id);
+        
+        }catch(error){
+        await queryRunner.rollbackTransaction();
+        this.handleExceptios(error)
+        }
+    
+  }
+
+}
+```
+
+Primero creamos una instancia del queryRunnerm, iniciamosla conexion a la base de datos y tambien iniciamos la transaccion de la base de datos, depues de esto realizamos el siguiente codigo
+
+```ts
+@Injectable()
+export class ProductsService {
+
+    ...
+    async update(id: string, updateProductDto: UpdateProductDto) {
+        ...
+        try{
+
+            if(images){
+                await queryRunner.manager.delete( ProductImage,{product: {id}})
+
+                product.images = images.map(image => this.productImageRepository.create({url: image}))
+            } 
+
+            await queryRunner.manager.save(product)
+            await queryRunner.commitTransaction()
+            await queryRunner.release()
+            
+            return this.finOnePlain(id);
+        
+        }catch(error){
+            await queryRunner.rollbackTransaction();
+            this.handleExceptios(error)
+        }
+    
+  }
+
+}
+```
+
+De esta forma revisamos si las imagenes contiene algo y ejecutamos el proceso de eliminacion de las imagenes que tienen asigando el producto que se esta actualizando, despues realizamos el guardado del producto y si no existe error tambien de hace el commit de la transaccion y la desconexion a la base de datos, en caso de que ocurra un error, regresamos la transccition para evitar elimninar informacion en caso de un error
+
+## Eliminacion en cascada
+
+Como tenemos una relacion de los productos con las imagenes no se puede eliminar un producto que tiene asignada una imagen ya que la relacion es un constraint pero podemos solucionar eso con una simple modificacion en el entity de las imagenes
+
+```ts
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Product } from "./product.entity";
+
+
+@Entity()
+export class ProductImage{
+
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column('text')
+    url: string;
+
+    @ManyToOne(
+        ()=> Product,
+        (product) => product.images,
+        {onDelete: 'CASCADE'}
+    )
+    product: Product;
+
+}
+```
+
+Dentro de la relacion definimos la propiedad `onDelete: 'CASCADE'` que indica a la base de datos que cuando se borra un prodcuto se tiene que eliminar tambien todas las imagenes que estan asignadas al producto.
+
+
+## Seed de los productos
+
+Para crear el seed de los prodcutos se pueden seguir esta lista de pasos 
+
+1. crear un nuevo modulo con el siguiten comando y despues borrar los elementos que no son necesarios
+
+```bash
+nest g res seed --no-spec
+```
+
+2. Realizar la inyeccion del `product.service` en el modulo de seed, esto con la devida exportaccion e importacion del servicio
+
+3. Realizar la funcion para la carga masiva de los produtos
+
+```ts
+@Injectable()
+export class SeedService {
+
+  constructor(
+    private readonly productService: ProductsService,
+  ){}
+
+  async runSeed(){
+
+    await this.insertNewProducts();
+    return 'excuted seed'
+  }
+
+  private async insertNewProducts(){
+    await this.productService.deleteAllProducts()
+
+    const products = initialData.products;
+
+    const insertPromises: Promise<any>[] = [];
+
+    products.forEach(product =>
+      insertPromises.push(this.productService.create(product))
+    )
+
+    await Promise.all(insertPromises);
+
+    return
+  }
+
+}
+```
+
+## Asignar nombre personalizado a las tablas
+
+Por defecto typeORM le asigna a las tablas el nombre de las entidades que estan definiendo la base de datos, pero si queremos usar un nombre diferentes por alguna razon, podemos hacerlo de la siguiente forma
+
+```ts
+...
+@Entity({
+    name: 'products'
+})
+export class Product {
+    ...
+}
+```
+
+```ts
+...
+@Entity({name: 'product_images'})
+export class ProductImage{
+    ...
+}
+```

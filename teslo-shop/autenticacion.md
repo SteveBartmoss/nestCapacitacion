@@ -321,5 +321,24 @@ export class AuthService {
   }
   ...
 }
+```
 
+## Proteger rutas con jwt
+
+Para poder usar la proteccion de una ruta tenemos que usar el siguiente decorador que integra la estrategia para poder validar que el token que mandamos en la peticion sea valido
+
+```ts
+import { AuthGuard } from '@nestjs/passport';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @UseGuards(AuthGuard())
+  @Get('private')
+  testingPrivateRoute(){
+    return {ok: true, message: 'Hi stalker'}
+  }
+  
+}
 ```

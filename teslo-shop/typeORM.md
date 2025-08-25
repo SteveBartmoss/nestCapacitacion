@@ -143,7 +143,7 @@ export class Product {
 
 ## Instalar validaciones
 
-Para poder validare de una forma simple la informacion envidada a la api debemos instalar lo siguiente
+Para poder validar de una forma simple la informacion envidada a la api debemos instalar lo siguiente
 
 ```bash
 yarn add class-validator class-transformer
@@ -162,7 +162,7 @@ app.useGlobalPipes(
 
 ## Configurar DTO
 
-Como siempre denemoc configurar el dto, una configuracion que me perecio nueva es la siguiente
+Como siempre debemos configurar el dto, una configuracion que me perecio nueva es la siguiente
 
 ```ts
 export class CreateProductDto {

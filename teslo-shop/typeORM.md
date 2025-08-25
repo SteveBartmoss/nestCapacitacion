@@ -19,7 +19,7 @@ services:
       - ./postgres:/var/lib/postgresql/data
 ```
 
-**Importante** Se debe tener un archivi **.env** para que tome las variables del nombre y el pasword de la base de datos, o en su defecto dejarlas escritas en el yaml
+**Importante** Se debe tener un archivo **.env** para que tome las variables del nombre y el pasword de la base de datos, o en su defecto dejarlas escritas en el yaml
 
 ## Configurar variables de entorno
 
@@ -116,7 +116,7 @@ export class ProductsModule {}
 
 ## Diferentes formas de declarar el entity
 
-Como en muchos casos, existen diferentes formas de declarar las propiedades de una columna, a continuacion se ejemplifican estas formas
+Como en muchos casos, existen diferentes formas de declarar las propiedades de una columna, a continuacion se ejemplifican algunas de estas formas
 
 ```ts
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";

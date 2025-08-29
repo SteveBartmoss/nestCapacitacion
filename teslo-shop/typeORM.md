@@ -298,7 +298,7 @@ await this.productRespository.delete({'id': id})
 
 ## Pagination
 
-Como se implemento en el anterior proyecto, definimos una pagination para que al leer todos lod productos no arroje toda la informacion de una sola vez, si no que muestre una cantidad determinada
+Como se implemento en el anterior proyecto, definimos una pagination para que al leer todos los productos no arroje toda la informacion de una sola vez, si no que muestre una cantidad determinada
 
 Primero definimos un dto para la informacion de la paginacion
 
@@ -396,7 +396,7 @@ export class ProductsService {
 }
 ```
 
-Para buscar por el titulo o e slug podemos utilizar un query builder como se muestra a continuacion
+Para buscar por el titulo o el slug podemos utilizar un query builder como se muestra a continuacion
 
 ```ts
 import { validate as isUUID } from 'uuid';

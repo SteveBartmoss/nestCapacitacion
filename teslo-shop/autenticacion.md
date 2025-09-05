@@ -61,14 +61,14 @@ Con esto ya podemos utilizar el patron repository para nuestro endpoint
 
 ## Encriptar password
 
-Para encriptar la password se pueda usar el paquete bcrypt que se instala con el siguiente comando
+Para encriptar el password se puede usar el paquete bcrypt que se instala con el siguiente comando
 
 ```bash
 yarn add bcrypt
 yarn add @type/bcrypt
 ```
 
-Con esto podemos usar el paquete de bcrypt para encriptar el password antes de que se guarde en base de datos de la siguiente manera
+Con esto podemos usar el paquete de bcrypt para encriptar el password antes de que se guarde en la base de datos de la siguiente manera
 
 ```ts
 @Injectable()

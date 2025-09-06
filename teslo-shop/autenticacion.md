@@ -202,7 +202,7 @@ import { JwtModule } from '@nestjs/jwt';
 export class AuthModule {}
 ```
 
-De esta forma estamos haciendo la inyeccion del config module y tambien estamos realizando la configuracion asyncrona del JwtModule
+De esta forma estamos haciendo la inyeccion del config module y tambien estamos realizando la configuracion asincrona del JwtModule
 
 ## JwtStrategy
 

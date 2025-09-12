@@ -1,6 +1,6 @@
 # Instalar Nest cli
 
-Para instalar la cli de nest y poder utilizar los diferentes comando se puede usar el siguiente comando
+Para instalar la cli de nest y poder utilizar los diferentes comandos de la cli, se puede usar el siguiente comando
 
 ```bash
 npm i -g @nestjs/cli
